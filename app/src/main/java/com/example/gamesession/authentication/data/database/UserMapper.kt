@@ -13,7 +13,8 @@ object UserMapper {
             phoneNumber = entity.phoneNumber,
             nickName = entity.nickName,
             rule = entity.rule,
-            isBlocked = entity.isBlocked
+            isBlocked = entity.isBlocked,
+            status = entity.status
         )
     }
 
@@ -25,15 +26,12 @@ object UserMapper {
             phoneNumber = user.phoneNumber,
             nickName = user.nickName,
             rule = user.rule,
-            isBlocked = user.isBlocked
+            isBlocked = user.isBlocked,
+            status = user.status
         )
     }
 
     fun toDomainList(entities: List<UserEntity>): List<User> {
         return entities.map { toDomain(it) }
-    }
-
-    fun toEntitiesList(users: List<User>): List<UserEntity> {
-        return users.map { toEntity(it) }
     }
 }

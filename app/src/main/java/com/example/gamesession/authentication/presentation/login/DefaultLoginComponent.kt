@@ -1,8 +1,10 @@
 package com.example.gamesession.authentication.presentation.login
 
 import com.arkivanov.decompose.ComponentContext
+import com.example.gamesession.authentication.domain.model.User
 import com.example.gamesession.authentication.domain.usecase.AuthenticateUserUseCase
-import com.example.gamesession.authentication.domain.usecase.InitializeUsersDataUseCase
+import com.example.gamesession.utils.AppDependencies.setCurrentUserUseCase
+import com.example.gamesession.utils.AppDependencies.updateUserUseCase
 import com.example.gamesession.utils.componentScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,11 +14,11 @@ import kotlinx.coroutines.launch
 
 class DefaultLoginComponent(
     componentContext: ComponentContext,
-    private val authenticateUser: AuthenticateUserUseCase,
-    private val initializeUsersData: InitializeUsersDataUseCase
+    private val authenticateUser: AuthenticateUserUseCase
 ) : LoginComponent, ComponentContext by componentContext {
 
     private val scope = componentScope()
+    private var onLoginSuccess: ((User) -> Unit)? = null
     private val _model = MutableStateFlow(
         stateKeeper.consume(KEY, strategy = LoginComponent.Model.serializer())
             ?: LoginComponent.Model()
@@ -24,7 +26,6 @@ class DefaultLoginComponent(
 
     init {
         stateKeeper.register(KEY, strategy = LoginComponent.Model.serializer()) { model.value }
-        scope.launch { initializeUsersData }
     }
 
     override val model: StateFlow<LoginComponent.Model>
@@ -47,7 +48,15 @@ class DefaultLoginComponent(
                 _model.update { it.copy(loginFailed = true) }
                 return@launch
             }
+            setCurrentUserUseCase(user.id)
+            val updatedUser = user.copy(status = true)
+            updateUserUseCase(updatedUser)
+            onLoginSuccess?.invoke(user)
         }
+    }
+
+    override fun setOnLoginSuccess(callback: (User) -> Unit) {
+        onLoginSuccess = callback
     }
 
     companion object {

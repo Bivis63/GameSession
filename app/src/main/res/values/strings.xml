@@ -11,4 +11,5 @@
     <string name="invalid_login">Неверный логин</string>
     <string name="login">Логин</string>
     <string name="textEnterButton">ВОЙТИ</string>
+    <string name="search">Поиск</string>
 </resources>

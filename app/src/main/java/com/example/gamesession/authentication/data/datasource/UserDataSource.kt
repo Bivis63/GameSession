@@ -5,6 +5,8 @@ import com.example.gamesession.authentication.data.database.UserMapper
 import com.example.gamesession.authentication.domain.model.RuleSettings
 import com.example.gamesession.authentication.domain.model.User
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class UserDataSource(
@@ -37,31 +39,52 @@ class UserDataSource(
         userDao.deleteUser(entity)
     }
 
+    suspend fun getCurrentUser(): User? {
+        val entity = userDao.getCurrentUser()
+        return entity?.let { UserMapper.toDomain(entity) }
+    }
+
+    suspend fun setUserAsCurrent(userId: Int) {
+        userDao.setUserAsCurrent(userId)
+    }
+
     suspend fun initializeSampleData(){
-        userDao.insertUser(
-            UserMapper.toEntity(
-                User(
-                    login = "admin",
-                    password = "admin123",
-                    nickName = "Bivis",
-                    phoneNumber = "11111111111",
-                    rule = RuleSettings.ADMIN,
-                    isBlocked = false
+
+        val existingUsers = userDao.getAllUsers().first()
+        if (existingUsers.isEmpty()) {
+            userDao.insertUser(
+                UserMapper.toEntity(
+                    User(
+                        login = "админ",
+                        password = "admin123",
+                        nickName = "Bivis",
+                        phoneNumber = "11111111111",
+                        rule = RuleSettings.ADMIN,
+                        isBlocked = false
+                    )
                 )
             )
-        )
-        userDao.insertUser(
-            UserMapper.toEntity(
-                User(
-                    login = "user",
-                    password = "user123",
-                    nickName = "Butt-Head",
-                    phoneNumber = "2222222222",
-                    rule = RuleSettings.USER,
-                    isBlocked = false
+            userDao.insertUser(
+                UserMapper.toEntity(
+                    User(
+                        login = "юзер",
+                        password = "user123",
+                        nickName = "Butt-Head",
+                        phoneNumber = "2222222222",
+                        rule = RuleSettings.USER,
+                        isBlocked = false
+                    )
                 )
             )
-        )
+        }
+    }
+
+    suspend fun isNickNameExists(nickName: String, excludeUserId: Int): Boolean {
+        return userDao.isNickNameExists(nickName, excludeUserId) > 0
+    }
+
+    suspend fun isPhoneNumberExists(phoneNumber: String, excludeUserId: Int): Boolean {
+        return userDao.isPhoneNumberExists(phoneNumber, excludeUserId) > 0
     }
 }
 

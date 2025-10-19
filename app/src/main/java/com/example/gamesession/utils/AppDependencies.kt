@@ -8,8 +8,10 @@ import com.example.gamesession.authentication.domain.repository.UserRepository
 import com.example.gamesession.authentication.domain.usecase.AuthenticateUserUseCase
 import com.example.gamesession.authentication.domain.usecase.DeleteUserUseCase
 import com.example.gamesession.authentication.domain.usecase.GetAllUsersUseCase
+import com.example.gamesession.authentication.domain.usecase.GetCurrentUserUseCase
 import com.example.gamesession.authentication.domain.usecase.InitializeUsersDataUseCase
 import com.example.gamesession.authentication.domain.usecase.InsertUserUseCase
+import com.example.gamesession.authentication.domain.usecase.SetCurrentUserUseCase
 import com.example.gamesession.authentication.domain.usecase.UpdateUserUseCase
 
 object AppDependencies {
@@ -40,4 +42,6 @@ object AppDependencies {
     val updateUserUseCase: UpdateUserUseCase by lazy { UpdateUserUseCase(getUserRepository()) }
     val deleteUserUseCase: DeleteUserUseCase by lazy { DeleteUserUseCase(getUserRepository()) }
     val initializeUsersDataUseCase: InitializeUsersDataUseCase by lazy { InitializeUsersDataUseCase(getUserRepository()) }
+    val getCurrentUserUseCase: GetCurrentUserUseCase by lazy { GetCurrentUserUseCase(getUserRepository()) }
+    val setCurrentUserUseCase: SetCurrentUserUseCase by lazy { SetCurrentUserUseCase(getUserRepository()) }
 }

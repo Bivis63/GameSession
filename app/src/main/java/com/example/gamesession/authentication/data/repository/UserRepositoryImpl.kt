@@ -35,4 +35,20 @@ class UserRepositoryImpl(
     override suspend fun initializeSampleData() {
         userDataSource.initializeSampleData()
     }
+
+    override suspend fun isNickNameExists(nickName: String, excludeUserId: Int): Boolean {
+        return userDataSource.isNickNameExists(nickName, excludeUserId)
+    }
+
+    override suspend fun isPhoneNumberExists(phoneNumber: String, excludeUserId: Int): Boolean {
+        return userDataSource.isPhoneNumberExists(phoneNumber, excludeUserId)
+    }
+
+    override suspend fun getCurrentUser(): User? {
+        return userDataSource.getCurrentUser()
+    }
+
+    override suspend fun setUserAsCurrent(userId: Int) {
+        userDataSource.setUserAsCurrent(userId)
+    }
 }

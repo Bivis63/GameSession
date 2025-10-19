@@ -47,6 +47,7 @@ dependencies {
     implementation("com.arkivanov.decompose:decompose:2.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.arkivanov.essenty:state-keeper:1.3.0")
+    implementation("com.arkivanov.decompose:extensions-compose-jetpack:2.1.2")
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

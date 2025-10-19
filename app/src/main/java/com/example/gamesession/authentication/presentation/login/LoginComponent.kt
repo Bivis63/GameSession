@@ -1,5 +1,6 @@
 package com.example.gamesession.authentication.presentation.login
 
+import com.example.gamesession.authentication.domain.model.User
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -9,6 +10,7 @@ interface LoginComponent {
     fun onLoginChanged(value: String)
     fun onPasswordChanged(value: String)
     fun onSubmit()
+    fun setOnLoginSuccess(callback: (User) -> Unit)
 
     @Serializable
     data class Model(
