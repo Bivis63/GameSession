@@ -35,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gamesession.R
@@ -45,14 +44,12 @@ import com.example.gamesession.ui.theme.ButtonColorEnabled
 import com.example.gamesession.ui.theme.ButtonTextColorDisabled
 import com.example.gamesession.ui.theme.ButtonTextColorEnabled
 import com.example.gamesession.ui.theme.CursorColor
-import com.example.gamesession.ui.theme.GameSessionTheme
 import com.example.gamesession.ui.theme.IndicatorColor
 import com.example.gamesession.ui.theme.InputTextColor
 import com.example.gamesession.ui.theme.LabelColor
 import com.example.gamesession.ui.theme.RedError
 import com.example.gamesession.ui.theme.TextFieldContainerColor
 import com.example.gamesession.ui.theme.TitleColor
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun LoginContent(

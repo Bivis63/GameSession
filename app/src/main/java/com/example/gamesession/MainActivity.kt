@@ -19,6 +19,8 @@ class MainActivity : ComponentActivity() {
 
         GlobalScope.launch {
             AppDependencies.initializeUsersDataUseCase()
+            AppDependencies.initializeComputersDataUseCase()
+            AppDependencies.initializeTariffsDataUseCase()
         }
 
         val rootComponent = DefaultRootComponent(

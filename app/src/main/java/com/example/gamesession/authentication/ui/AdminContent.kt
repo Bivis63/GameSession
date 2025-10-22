@@ -64,16 +64,21 @@ import com.example.gamesession.ui.theme.TextFieldContainerColor
 @Composable
 fun AdminContent(
     component: AdminComponent,
+    selectedIndex: Int,
+    onUserClick: () -> Unit,
+    onSessionClick: () -> Unit,
 ) {
     val model by component.model.collectAsState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .statusBarsPadding()
-            .padding(8.dp),
-
+            .statusBarsPadding(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -146,7 +151,17 @@ fun AdminContent(
             }
         }
 
-        BottomNavigationBar(0, {}, {})
+        }
+
+        Box(
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            BottomNavigationBar(
+                selectedIndex = selectedIndex,
+                onUserClick = onUserClick,
+                onSessionClick = onSessionClick
+            )
+        }
     }
 
     model.errorMessage?.let { errorMessage ->

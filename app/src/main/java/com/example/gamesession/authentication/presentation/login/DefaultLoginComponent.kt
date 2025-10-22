@@ -48,6 +48,10 @@ class DefaultLoginComponent(
                 _model.update { it.copy(loginFailed = true) }
                 return@launch
             }
+            if (user.isBlocked) {
+                _model.update { it.copy(loginFailed = true) }
+                return@launch
+            }
             setCurrentUserUseCase(user.id)
             val updatedUser = user.copy(status = true)
             updateUserUseCase(updatedUser)

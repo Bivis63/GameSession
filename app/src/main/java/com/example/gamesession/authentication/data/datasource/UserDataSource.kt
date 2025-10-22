@@ -5,7 +5,6 @@ import com.example.gamesession.authentication.data.database.UserMapper
 import com.example.gamesession.authentication.domain.model.RuleSettings
 import com.example.gamesession.authentication.domain.model.User
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -58,7 +57,7 @@ class UserDataSource(
                         login = "админ",
                         password = "admin123",
                         nickName = "Bivis",
-                        phoneNumber = "11111111111",
+                        phoneNumber = "+79270624520",
                         rule = RuleSettings.ADMIN,
                         isBlocked = false
                     )
@@ -70,7 +69,7 @@ class UserDataSource(
                         login = "юзер",
                         password = "user123",
                         nickName = "Butt-Head",
-                        phoneNumber = "2222222222",
+                        phoneNumber = "79277664541",
                         rule = RuleSettings.USER,
                         isBlocked = false
                     )

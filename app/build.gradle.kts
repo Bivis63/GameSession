@@ -43,6 +43,7 @@ android {
 
 dependencies {
 
+
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
     implementation("com.arkivanov.decompose:decompose:2.2.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
@@ -62,6 +63,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

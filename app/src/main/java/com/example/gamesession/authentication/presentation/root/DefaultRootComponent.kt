@@ -7,14 +7,19 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
+import com.example.gamesession.authentication.domain.model.RuleSettings
 import com.example.gamesession.authentication.domain.model.User
+import com.example.gamesession.authentication.presentation.admin.DefaultAdminPanelComponent
 import com.example.gamesession.authentication.presentation.login.DefaultLoginComponent
+import com.example.gamesession.authentication.presentation.session.DefaultAdminSessionComponent
 import com.example.gamesession.authentication.presentation.user.DefaultAdminComponent
+import com.example.gamesession.authentication.presentation.user.DefaultUserComponent
 import com.example.gamesession.utils.AppDependencies
 import kotlinx.serialization.Serializable
 
+
 class DefaultRootComponent(
-    componentContext: ComponentContext
+    componentContext: ComponentContext,
 ) : RootComponent, ComponentContext by componentContext {
 
     private val navigation = StackNavigation<Config>()
@@ -38,23 +43,56 @@ class DefaultRootComponent(
                     authenticateUser = AppDependencies.authenticateUserUseCase
                 )
                 component.setOnLoginSuccess { user ->
-                    navigateToAdmin(user)
+                    when (user.rule) {
+                        RuleSettings.ADMIN -> navigateToAdminPanel(user)
+                        RuleSettings.USER -> navigateToUser(user)
+                    }
                 }
                 RootComponent.Child.Login(component)
             }
 
-            is Config.Admin -> {
-                val component = DefaultAdminComponent(
+            is Config.AdminPanel -> {
+                val adminPanelComponent = DefaultAdminPanelComponent(
+                    componentContext = componentContext,
+                    user = config.user,
+                    onLogoutCallback = { navigateToLogin() }
+                )
+
+                val adminComponent = DefaultAdminComponent(
                     componentContext = componentContext,
                     onLogoutCallback = { navigateToLogin() }
                 )
-                RootComponent.Child.Admin(component)
+
+                val adminSessionComponent = DefaultAdminSessionComponent(
+                    componentContext = componentContext,
+                    user = config.user,
+                    onLogoutCallback = { navigateToLogin() }
+                )
+
+                RootComponent.Child.AdminPanel(
+                    adminPanelComponent,
+                    adminComponent,
+                    adminSessionComponent
+                )
+            }
+
+            is Config.Users -> {
+                val component = DefaultUserComponent(
+                    componentContext = componentContext,
+                    user = config.user,
+                    onLogoutCallback = { navigateToLogin() }
+                )
+                RootComponent.Child.User(component)
             }
         }
     }
 
-    fun navigateToAdmin(user: User) {
-        navigation.push(Config.Admin(user))
+    fun navigateToAdminPanel(user: User) {
+        navigation.push(Config.AdminPanel(user))
+    }
+
+    fun navigateToUser(user: User) {
+        navigation.push(Config.Users(user))
     }
 
     fun navigateToLogin() {
@@ -67,6 +105,13 @@ class DefaultRootComponent(
         object Login : Config
 
         @Serializable
-        data class Admin(val user: User) : Config
+        data class AdminPanel(
+            val user: User
+        ) : Config
+
+        @Serializable
+        data class Users(
+            val user: User
+        ) : Config
     }
 }

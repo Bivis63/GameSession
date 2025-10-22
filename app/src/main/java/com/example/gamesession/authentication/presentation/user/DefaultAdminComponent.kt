@@ -8,9 +8,7 @@ import com.example.gamesession.authentication.domain.usecase.GetCurrentUserUseCa
 import com.example.gamesession.authentication.domain.usecase.InsertUserUseCase
 import com.example.gamesession.authentication.domain.usecase.UpdateUserUseCase
 import com.example.gamesession.utils.AppDependencies
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import com.example.gamesession.utils.componentScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +30,7 @@ class DefaultAdminComponent(
         private const val KEY = "AdminComponent"
     }
 
-    private val componentScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = componentScope()
 
     private val _model = MutableStateFlow(
         stateKeeper.consume(KEY, strategy = AdminComponent.Model.serializer())
@@ -58,7 +56,7 @@ class DefaultAdminComponent(
                     isLoading = false
                 )
             }
-            .launchIn(componentScope)
+            .launchIn(scope)
     }
 
     private fun filterUsers(users: List<User>, query: String): List<User> {
@@ -85,7 +83,7 @@ class DefaultAdminComponent(
     override fun onDeleteUserClicked(userId: Int) {
         val user = _model.value.users.find { it.id == userId }
         user?.let {
-            componentScope.launch {
+            scope.launch {
                 try {
                     deleteUserUseCase(it)
                     loadUsers()
@@ -102,7 +100,7 @@ class DefaultAdminComponent(
         val user = _model.value.users.find { it.id == userId }
         user?.let {
             val updatedUser = it.copy(isBlocked = !it.isBlocked)
-            componentScope.launch {
+            scope.launch {
                 try {
                     updateUserUseCase(updatedUser)
                     loadUsers()
@@ -150,7 +148,7 @@ class DefaultAdminComponent(
             phoneNumber = phoneNumber
         )
 
-        componentScope.launch {
+        scope.launch {
             try {
                 val nickNameExists = AppDependencies.getUserRepository().isNickNameExists(nickName)
                 val phoneNumberExists =
@@ -203,7 +201,7 @@ class DefaultAdminComponent(
             phoneNumber = phoneNumber
         )
 
-        componentScope.launch {
+        scope.launch {
             try {
                 updateUserUseCase(updatedUser)
                 loadUsers()
@@ -221,7 +219,7 @@ class DefaultAdminComponent(
     }
 
     override fun onLogout() {
-        componentScope.launch {
+        scope.launch {
             val currentUser = getCurrentUserUseCase()
             currentUser?.let { user ->
                 val updatedUser = user.copy(status = false)

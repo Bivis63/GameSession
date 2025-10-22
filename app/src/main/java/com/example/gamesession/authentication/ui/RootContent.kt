@@ -29,8 +29,16 @@ fun RootContent(
                         LoginContent(component = instance.component)
                     }
 
-                    is RootComponent.Child.Admin -> {
-                        AdminContent(component = instance.component)
+                    is RootComponent.Child.AdminPanel -> {
+                        AdminPanelContent(
+                            component = instance.adminPanelComponent,
+                            adminComponent = instance.adminComponent,
+                            adminSessionComponent = instance.adminSessionComponent
+                        )
+                    }
+
+                    is RootComponent.Child.User -> {
+                        UserContent(component = instance.component)
                     }
                 }
             }
