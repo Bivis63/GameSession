@@ -4,6 +4,9 @@ import com.arkivanov.decompose.ComponentContext
 import com.example.gamesession.authentication.domain.model.Computer
 import com.example.gamesession.authentication.domain.model.GameSession
 import com.example.gamesession.authentication.domain.model.User
+import com.example.gamesession.authentication.domain.model.SessionStatus
+import com.example.gamesession.utils.SessionUtils
+import kotlinx.coroutines.delay
 import com.example.gamesession.authentication.domain.usecase.CheckComputerAvailabilityUseCase
 import com.example.gamesession.authentication.domain.usecase.DeleteComputerUseCase
 import com.example.gamesession.authentication.domain.usecase.GetActiveTariffsUseCase
@@ -16,6 +19,7 @@ import com.example.gamesession.authentication.domain.usecase.GetNextComputerCode
 import com.example.gamesession.authentication.domain.usecase.InsertComputerUseCase
 import com.example.gamesession.authentication.domain.usecase.InsertGameSessionUseCase
 import com.example.gamesession.authentication.domain.usecase.UpdateUserUseCase
+import com.example.gamesession.authentication.domain.usecase.FinishSessionUseCase
 import com.example.gamesession.utils.AppDependencies
 import com.example.gamesession.utils.componentScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +45,8 @@ class DefaultAdminSessionComponent(
     private val insertGameSessionUseCase: InsertGameSessionUseCase = AppDependencies.insertGameSessionUseCase,
     private val insertComputerUseCase: InsertComputerUseCase = AppDependencies.insertComputerUseCase,
     private val deleteComputerUseCase: DeleteComputerUseCase = AppDependencies.deleteComputerUseCase,
-    private val getNextComputerCodeUseCase: GetNextComputerCodeUseCase = AppDependencies.getNextComputerCodeUseCase
+    private val getNextComputerCodeUseCase: GetNextComputerCodeUseCase = AppDependencies.getNextComputerCodeUseCase,
+    private val finishSessionUseCase: FinishSessionUseCase = AppDependencies.finishSessionUseCase
 ) : AdminSessionComponent, ComponentContext by componentContext {
 
     companion object {
@@ -58,6 +63,7 @@ class DefaultAdminSessionComponent(
     init {
         stateKeeper.register(KEY, strategy = AdminSessionComponent.Model.serializer()) { model.value }
         loadSessions()
+        startTimeUpdater()
     }
     
     private fun loadSessions() {
@@ -80,16 +86,54 @@ class DefaultAdminSessionComponent(
             val sessionItems = sortedSessions.map { session ->
                 val computer = computers.find { it.id == session.computerId }
                 val user = users.find { it.id == session.userId }
-                AdminSessionComponent.SessionItem(
-                    id = session.id,
-                    headerText = "${session.date} ${session.time}",
-                    participants = user?.let { listOf(it) } ?: emptyList(),
-                    computerName = computer?.name ?: "Неизвестный ПК",
-                    duration = session.durationHours
-                )
+                val actualDuration = SessionUtils.calculateActualDurationMinutes(session)
+
+            AdminSessionComponent.SessionItem(
+                id = session.id,
+                headerText = "${session.date} ${session.time}",
+                participants = user?.let { listOf(it) } ?: emptyList(),
+                computerName = computer?.name ?: "Неизвестный ПК",
+                duration = session.durationHours,
+                status = session.status,
+                actualDuration = SessionUtils.formatDuration(actualDuration),
+                cost = session.totalCost,
+                startTime = session.startTime,
+                durationHours = session.durationHours
+            )
             }
             
             _model.value = _model.value.copy(sessions = sessionItems)
+        }
+    }
+
+    private fun startTimeUpdater() {
+        scope.launch {
+            while (true) {
+                delay(1000)
+                val hasActiveSessions = _model.value.sessions.any { 
+                    it.status == SessionStatus.RUNNING || it.status == SessionStatus.PAUSED 
+                }
+                if (hasActiveSessions) {
+                    loadSessions()
+                    checkAndAutoFinishExpiredSessions()
+                }
+            }
+        }
+    }
+
+    private suspend fun checkAndAutoFinishExpiredSessions() {
+        val allSessions = getAllGameSessionsUseCase().first()
+        val runningSessions = allSessions.filter { 
+            it.status == SessionStatus.RUNNING 
+        }
+        
+        for (session in runningSessions) {
+            if (SessionUtils.isSessionTimeExpired(session)) {
+                finishSessionUseCase(session.id)
+                    .onSuccess { cost ->
+                        loadSessions()
+                    }
+            }
         }
     }
 
@@ -222,7 +266,8 @@ class DefaultAdminSessionComponent(
                                     time = model.time,
                                     durationHours = selectedTariff.durationHours,
                                     computerId = model.selectedComputerId!!,
-                                    userId = userId
+                                    userId = userId,
+                                    tariffId = selectedTariff.id
                                 )
                                 insertGameSessionUseCase(gameSession)
                             }
@@ -311,6 +356,79 @@ class DefaultAdminSessionComponent(
             updateUserUseCase(updatedUser)
         }
         onLogoutCallback()
+    }
+
+    override fun onStartSession(sessionId: Int) {
+        scope.launch {
+            try {
+                val result = AppDependencies.startSessionUseCase(sessionId)
+                result.fold(
+                    onSuccess = {
+                        loadSessions()
+                    },
+                    onFailure = { error ->
+                        _model.value = _model.value.copy(errorMessage = error.message)
+                    }
+                )
+            } catch (e: Exception) {
+                _model.value = _model.value.copy(errorMessage = "Ошибка запуска сессии: ${e.message}")
+            }
+        }
+    }
+
+    override fun onPauseSession(sessionId: Int) {
+        scope.launch {
+            try {
+                val result = AppDependencies.pauseSessionUseCase(sessionId)
+                result.fold(
+                    onSuccess = {
+                        loadSessions()
+                    },
+                    onFailure = { error ->
+                        _model.value = _model.value.copy(errorMessage = error.message)
+                    }
+                )
+            } catch (e: Exception) {
+                _model.value = _model.value.copy(errorMessage = "Ошибка паузы сессии: ${e.message}")
+            }
+        }
+    }
+
+    override fun onResumeSession(sessionId: Int) {
+        scope.launch {
+            try {
+                val result = AppDependencies.resumeSessionUseCase(sessionId)
+                result.fold(
+                    onSuccess = {
+                        loadSessions()
+                    },
+                    onFailure = { error ->
+                        _model.value = _model.value.copy(errorMessage = error.message)
+                    }
+                )
+            } catch (e: Exception) {
+                _model.value = _model.value.copy(errorMessage = "Ошибка возобновления сессии: ${e.message}")
+            }
+        }
+    }
+
+    override fun onFinishSession(sessionId: Int) {
+        scope.launch {
+            try {
+                val result = AppDependencies.finishSessionUseCase(sessionId)
+                result.fold(
+                    onSuccess = { totalCost ->
+                        loadSessions()
+                        _model.value = _model.value.copy(errorMessage = "Сессия завершена. Стоимость: $totalCost руб.")
+                    },
+                    onFailure = { error ->
+                        _model.value = _model.value.copy(errorMessage = error.message)
+                    }
+                )
+            } catch (e: Exception) {
+                _model.value = _model.value.copy(errorMessage = "Ошибка завершения сессии: ${e.message}")
+            }
+        }
     }
 }
 

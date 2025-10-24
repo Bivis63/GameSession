@@ -48,8 +48,10 @@ import androidx.compose.ui.unit.sp
 import com.example.gamesession.R
 import com.example.gamesession.authentication.domain.model.Computer
 import com.example.gamesession.authentication.domain.model.SessionTariff
+import com.example.gamesession.authentication.domain.model.SessionStatus
 import com.example.gamesession.authentication.domain.model.User
 import com.example.gamesession.authentication.presentation.session.AdminSessionComponent
+import com.example.gamesession.utils.SessionUtils
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -85,6 +87,10 @@ fun AdminSessionContent(
         SessionsScreenContent(
             sessions = model.sessions,
             onAddSessionClicked = component::onAddSessionClicked,
+            onStartSession = component::onStartSession,
+            onPauseSession = component::onPauseSession,
+            onResumeSession = component::onResumeSession,
+            onFinishSession = component::onFinishSession,
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -99,6 +105,10 @@ fun AdminSessionContent(
 private fun SessionsScreenContent(
     sessions: List<AdminSessionComponent.SessionItem>,
     onAddSessionClicked: () -> Unit,
+    onStartSession: (Int) -> Unit,
+    onPauseSession: (Int) -> Unit,
+    onResumeSession: (Int) -> Unit,
+    onFinishSession: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -111,7 +121,13 @@ private fun SessionsScreenContent(
         if (sessions.isEmpty()) {
             EmptySessionsPlaceholder()
         } else {
-            SessionsList(sessions = sessions)
+            SessionsList(
+                sessions = sessions,
+                onStartSession = onStartSession,
+                onPauseSession = onPauseSession,
+                onResumeSession = onResumeSession,
+                onFinishSession = onFinishSession
+            )
         }
     }
 }
@@ -156,17 +172,24 @@ private fun EmptySessionsPlaceholder() {
 }
 
 @Composable
-private fun SessionsList(sessions: List<AdminSessionComponent.SessionItem>) {
+private fun SessionsList(
+    sessions: List<AdminSessionComponent.SessionItem>,
+    onStartSession: (Int) -> Unit,
+    onPauseSession: (Int) -> Unit,
+    onResumeSession: (Int) -> Unit,
+    onFinishSession: (Int) -> Unit
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(sessions) { session ->
             SessionCard(
-                header = session.headerText,
-                users = session.participants,
-                computerName = session.computerName,
-                duration = session.duration
+                session = session,
+                onStart = { onStartSession(session.id) },
+                onPause = { onPauseSession(session.id) },
+                onResume = { onResumeSession(session.id) },
+                onFinish = { onFinishSession(session.id) }
             )
         }
     }
@@ -277,10 +300,11 @@ private fun AddComputerDialog(
 
 @Composable
 private fun SessionCard(
-    header: String,
-    users: List<User>,
-    computerName: String,
-    duration: Double,
+    session: AdminSessionComponent.SessionItem,
+    onStart: () -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onFinish: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -295,13 +319,26 @@ private fun SessionCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(text = header, color = Color.White, fontSize = 12.sp)
-                Text(text = "ПК: $computerName", color = Color.Gray, fontSize = 10.sp)
-                Text(text = "Длительность: ${duration}ч", color = Color.Gray, fontSize = 10.sp)
+                Text(text = session.headerText, color = Color.White, fontSize = 12.sp)
+                Text(text = "ПК: ${session.computerName}", color = Color.Gray, fontSize = 10.sp)
+                Text(text = "Время: ${session.actualDuration}", color = Color.Gray, fontSize = 10.sp)
+                Text(
+                    text = "Статус: ${SessionUtils.getStatusText(session.status)}",
+                    color = when(session.status) {
+                        SessionStatus.SCHEDULED -> Color.Yellow
+                        SessionStatus.RUNNING -> if (SessionUtils.isAdminSessionTimeAlmostExpired(session)) Color.Red else Color.Green
+                        SessionStatus.PAUSED -> Color.Blue
+                        SessionStatus.FINISHED -> Color.Gray
+                    },
+                    fontSize = 10.sp
+                )
+                if (session.cost > 0) {
+                    Text(text = "Стоимость: ${session.cost} руб.", color = Color.Cyan, fontSize = 10.sp)
+                }
             }
         }
 
-        users.forEach { user ->
+        session.participants.forEach { user ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -330,6 +367,58 @@ private fun SessionCard(
                     color = if (user.status) Color.Green else Color.Gray,
                     fontSize = 12.sp
                 )
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            when (session.status) {
+                SessionStatus.SCHEDULED -> {
+                    Button(
+                        onClick = onStart,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Старт", color = Color.White, fontSize = 12.sp)
+                    }
+                }
+                SessionStatus.RUNNING -> {
+                    Button(
+                        onClick = onPause,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Пауза", color = Color.White, fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = onFinish,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Завершить", color = Color.White, fontSize = 12.sp)
+                    }
+                }
+                SessionStatus.PAUSED -> {
+                    Button(
+                        onClick = onResume,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Продолжить", color = Color.White, fontSize = 12.sp)
+                    }
+                    Button(
+                        onClick = onFinish,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Завершить", color = Color.White, fontSize = 12.sp)
+                    }
+                }
+                SessionStatus.FINISHED -> {}
             }
         }
     }
@@ -724,5 +813,3 @@ private fun generateAvatarColor(userId: Int): Color {
     )
     return colors[userId % colors.size]
 }
-
-

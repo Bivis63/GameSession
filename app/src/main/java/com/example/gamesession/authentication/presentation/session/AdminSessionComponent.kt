@@ -3,6 +3,7 @@ package com.example.gamesession.authentication.presentation.session
 import com.example.gamesession.authentication.domain.model.User
 import com.example.gamesession.authentication.domain.model.Computer
 import com.example.gamesession.authentication.domain.model.SessionTariff
+import com.example.gamesession.authentication.domain.model.SessionStatus
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
@@ -26,6 +27,10 @@ interface AdminSessionComponent {
     fun onDismissAddComputer()
     fun onConfirmAddComputer()
     fun onDeleteComputer(computerId: Int)
+    fun onStartSession(sessionId: Int)
+    fun onPauseSession(sessionId: Int)
+    fun onResumeSession(sessionId: Int)
+    fun onFinishSession(sessionId: Int)
 
     @Serializable
     data class Model(
@@ -55,7 +60,12 @@ interface AdminSessionComponent {
         val headerText: String,
         val participants: List<User>,
         val computerName: String,
-        val duration: Double
+        val duration: Double,
+        val status: SessionStatus = SessionStatus.SCHEDULED,
+        val actualDuration: String = "0м",
+        val cost: Int = 0,
+        val startTime: Long = 0L,
+        val durationHours: Double = 0.0
     )
 }
 

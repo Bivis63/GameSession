@@ -1,7 +1,7 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.mapper
 
+import com.example.gamesession.authentication.data.database.entity.UserEntity
 import com.example.gamesession.authentication.domain.model.User
-import kotlin.math.log
 
 object UserMapper {
 

@@ -1,7 +1,7 @@
 package com.example.gamesession.authentication.data.datasource
 
-import com.example.gamesession.authentication.data.database.ComputerDao
-import com.example.gamesession.authentication.data.database.ComputerMapper
+import com.example.gamesession.authentication.data.database.dao.ComputerDao
+import com.example.gamesession.authentication.data.database.mapper.ComputerMapper
 import com.example.gamesession.authentication.domain.model.Computer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -1,4 +1,4 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.gamesession.authentication.data.database.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -29,7 +30,7 @@ interface UserDao {
     @Query("SELECT COUNT(*) FROM users WHERE phoneNumber = :phoneNumber AND id != :excludeUserId")
     suspend fun isPhoneNumberExists(phoneNumber: String, excludeUserId: Int): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertUser(user: UserEntity)
 
     @Update

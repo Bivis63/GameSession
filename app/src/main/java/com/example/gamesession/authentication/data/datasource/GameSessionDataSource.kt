@@ -1,8 +1,12 @@
 package com.example.gamesession.authentication.data.datasource
 
-import com.example.gamesession.authentication.data.database.GameSessionDao
-import com.example.gamesession.authentication.data.database.GameSessionMapper
+import com.example.gamesession.authentication.data.database.dao.GameSessionDao
+import com.example.gamesession.authentication.data.database.entity.GameSessionEntity
+import com.example.gamesession.authentication.data.database.mapper.GameSessionMapper
 import com.example.gamesession.authentication.domain.model.GameSession
+import com.example.gamesession.authentication.domain.model.SessionStatus
+import com.example.gamesession.authentication.domain.model.SessionTariff
+import com.example.gamesession.utils.SessionUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -48,8 +52,12 @@ class GameSessionDataSource(
         gameSessionDao.updateGameSession(entity)
     }
 
-    suspend fun updateGameSessionStatus(id: Int, isActive: Boolean) {
-        gameSessionDao.updateGameSessionStatus(id, isActive)
+    suspend fun updateGameSessionStatus(id: Int, status: String) {
+        gameSessionDao.updateGameSessionStatus(id, status)
+    }
+
+    suspend fun getActiveGameSessionByComputer(computerId: Int): GameSessionEntity? {
+        return gameSessionDao.getActiveGameSessionByComputer(computerId)
     }
 
     suspend fun getAvailableTimeSlots(
@@ -61,7 +69,7 @@ class GameSessionDataSource(
             .map(GameSessionMapper::toDomain)
 
         val occupiedSlots = existingSessions
-            .filter { it.date == date && it.isActive }
+            .filter { it.date == date && it.status.name in listOf("RUNNING", "PAUSED") }
             .map { session ->
                 val startTime = parseTime(session.time)
                 val endTime = startTime + (session.durationHours * 60).toInt()
@@ -109,7 +117,7 @@ class GameSessionDataSource(
         val requestedEndTime = requestedStartTime + (durationHours * 60).toInt()
 
         return existingSessions
-            .filter { it.date == date && it.isActive }
+            .filter { it.date == date && it.status.name in listOf("RUNNING", "PAUSED") }
             .none { existingSession ->
                 val existingStartTime = parseTime(existingSession.time)
                 val existingEndTime =
@@ -128,6 +136,111 @@ class GameSessionDataSource(
         val hours = minutes / 60
         val mins = minutes % 60
         return String.format("%02d:%02d", hours, mins)
+    }
+
+
+    suspend fun startSession(sessionId: Int): Result<GameSession> {
+        return try {
+            val session = getGameSessionById(sessionId)
+                ?: return Result.failure(Exception("Сессия не найдена"))
+
+            if (session.status != SessionStatus.SCHEDULED) {
+                return Result.failure(Exception("Сессия уже запущена или завершена"))
+            }
+
+
+            val activeSession = getActiveGameSessionByComputer(session.computerId)
+            if (activeSession != null) {
+                return Result.failure(Exception("На этом компьютере уже запущена сессия"))
+            }
+
+            val updatedSession = session.copy(
+                status = SessionStatus.RUNNING,
+                startTime = System.currentTimeMillis()
+            )
+
+            updateGameSession(updatedSession)
+            Result.success(updatedSession)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun pauseSession(sessionId: Int): Result<Unit> {
+        return try {
+            val session = getGameSessionById(sessionId)
+                ?: return Result.failure(Exception("Сессия не найдена"))
+
+            if (session.status != SessionStatus.RUNNING) {
+                return Result.failure(Exception("Сессия не запущена"))
+            }
+
+            val currentTime = System.currentTimeMillis()
+            val elapsedTime = currentTime - session.startTime
+            val newPausedTime = session.pausedTime + elapsedTime
+
+            val updatedSession = session.copy(
+                status = SessionStatus.PAUSED,
+                pausedTime = newPausedTime
+            )
+
+            updateGameSession(updatedSession)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resumeSession(sessionId: Int): Result<Unit> {
+        return try {
+            val session = getGameSessionById(sessionId)
+                ?: return Result.failure(Exception("Сессия не найдена"))
+
+            if (session.status != SessionStatus.PAUSED) {
+                return Result.failure(Exception("Сессия не на паузе"))
+            }
+
+            val updatedSession = session.copy(
+                status = SessionStatus.RUNNING,
+                startTime = System.currentTimeMillis()
+            )
+
+            updateGameSession(updatedSession)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun finishSession(sessionId: Int, getTariffById: suspend (Int) -> SessionTariff?): Result<Int> {
+        return try {
+            val session = getGameSessionById(sessionId)
+                ?: return Result.failure(Exception("Сессия не найдена"))
+
+            if (session.status == SessionStatus.FINISHED) {
+                return Result.failure(Exception("Сессия уже завершена"))
+            }
+
+            val actualMinutes = SessionUtils.calculateActualDurationMinutes(session)
+            val billedMinutes = SessionUtils.calculateBilledMinutes(actualMinutes)
+            
+            val tariff = getTariffById(session.tariffId)
+                ?: return Result.failure(Exception("Тариф не найден"))
+
+            val totalCost = SessionUtils.calculateSessionCost(session, tariff)
+
+            val updatedSession = session.copy(
+                status = SessionStatus.FINISHED,
+                actualDurationMinutes = actualMinutes,
+                billedMinutes = billedMinutes,
+                totalCost = totalCost
+            )
+
+            updateGameSession(updatedSession)
+            Result.success(totalCost)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
 

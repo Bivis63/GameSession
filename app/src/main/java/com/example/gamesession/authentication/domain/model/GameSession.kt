@@ -10,6 +10,12 @@ data class GameSession(
     val durationHours: Double,
     val computerId: Int,
     val userId: Int,
-    val isActive: Boolean = true
+    val tariffId: Int,
+    val status: SessionStatus = SessionStatus.SCHEDULED,
+    val startTime: Long = 0L,
+    val pausedTime: Long = 0L,
+    val actualDurationMinutes: Int = 0,
+    val billedMinutes: Int = 0,
+    val totalCost: Int = 0
 )
 

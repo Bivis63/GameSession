@@ -1,7 +1,7 @@
 package com.example.gamesession.authentication.data.datasource
 
-import com.example.gamesession.authentication.data.database.SessionTariffDao
-import com.example.gamesession.authentication.data.database.SessionTariffMapper
+import com.example.gamesession.authentication.data.database.dao.SessionTariffDao
+import com.example.gamesession.authentication.data.database.mapper.SessionTariffMapper
 import com.example.gamesession.authentication.domain.model.SessionTariff
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -49,6 +49,9 @@ class SessionTariffDataSource(
         }
     }
 }
+
+
+
 
 
 

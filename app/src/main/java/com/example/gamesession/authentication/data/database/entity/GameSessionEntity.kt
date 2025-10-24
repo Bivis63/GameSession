@@ -1,4 +1,4 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.Index
@@ -8,7 +8,8 @@ import androidx.room.PrimaryKey
     tableName = "game_sessions",
     indices = [
         Index(value = ["computerId"]),
-        Index(value = ["userId"])
+        Index(value = ["userId"]),
+        Index(value = ["tariffId"])
     ]
 )
 data class GameSessionEntity(
@@ -19,6 +20,12 @@ data class GameSessionEntity(
     val durationHours: Double,
     val computerId: Int,
     val userId: Int,
-    val isActive: Boolean = true
+    val tariffId: Int,
+    val status: String = "SCHEDULED",
+    val startTime: Long = 0L,
+    val pausedTime: Long = 0L,
+    val actualDurationMinutes: Int = 0,
+    val billedMinutes: Int = 0,
+    val totalCost: Int = 0
 )
 

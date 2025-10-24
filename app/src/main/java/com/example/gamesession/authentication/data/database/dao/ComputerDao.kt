@@ -1,4 +1,4 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.gamesession.authentication.data.database.entity.ComputerEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,7 +26,7 @@ interface ComputerDao {
     @Query("SELECT COUNT(*) FROM computers WHERE code = :code AND id != :excludeComputerId")
     suspend fun isCodeExists(code: String, excludeComputerId: Int): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertComputer(computer: ComputerEntity)
 
     @Update
@@ -37,4 +38,3 @@ interface ComputerDao {
     @Query("UPDATE computers SET isAvailable = :isAvailable WHERE id = :id")
     suspend fun updateComputerAvailability(id: Int, isAvailable: Boolean)
 }
-

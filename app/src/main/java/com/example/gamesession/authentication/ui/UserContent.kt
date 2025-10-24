@@ -30,7 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gamesession.R
+import com.example.gamesession.authentication.domain.model.SessionStatus
 import com.example.gamesession.authentication.presentation.user.UserComponent
+import com.example.gamesession.utils.SessionUtils
 
 @Composable
 fun UserContent(
@@ -137,8 +139,18 @@ private fun UserSessionCard(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "${session.duration}ч",
-                    color = Color.Green,
+                    text = when(session.status) {
+                        SessionStatus.RUNNING -> session.actualDuration
+                        SessionStatus.PAUSED -> session.actualDuration
+                        SessionStatus.FINISHED -> session.actualDuration
+                        else -> "${session.duration}ч"
+                    },
+                    color = when(session.status) {
+                        SessionStatus.RUNNING -> Color.Green
+                        SessionStatus.PAUSED -> Color.Blue
+                        SessionStatus.FINISHED -> Color.Gray
+                        else -> Color.Green
+                    },
                     fontSize = 12.sp
                 )
             }
@@ -150,10 +162,22 @@ private fun UserSessionCard(
                 modifier = Modifier.padding(top = 4.dp)
             )
             
+            Text(
+                text = "Статус: ${SessionUtils.getStatusText(session.status)}",
+                color = when(session.status) {
+                    SessionStatus.SCHEDULED -> Color.Yellow
+                    SessionStatus.RUNNING -> if (SessionUtils.isUserSessionTimeAlmostExpired(session)) Color.Red else Color.Green
+                    SessionStatus.PAUSED -> Color.Blue
+                    SessionStatus.FINISHED -> Color.Gray
+                },
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+            
             if (session.price > 0) {
                 Text(
-                    text = "Цена: ${session.price} руб",
-                    color = Color.Yellow,
+                    text = "Стоимость: ${session.price} руб",
+                    color = Color.Cyan,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 2.dp)
                 )

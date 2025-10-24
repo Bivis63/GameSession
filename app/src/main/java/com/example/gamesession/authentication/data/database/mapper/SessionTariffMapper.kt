@@ -1,5 +1,6 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.mapper
 
+import com.example.gamesession.authentication.data.database.entity.SessionTariffEntity
 import com.example.gamesession.authentication.domain.model.SessionTariff
 
 object SessionTariffMapper {

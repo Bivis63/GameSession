@@ -1,7 +1,7 @@
 package com.example.gamesession.authentication.data.datasource
 
-import com.example.gamesession.authentication.data.database.UserDao
-import com.example.gamesession.authentication.data.database.UserMapper
+import com.example.gamesession.authentication.data.database.dao.UserDao
+import com.example.gamesession.authentication.data.database.mapper.UserMapper
 import com.example.gamesession.authentication.domain.model.RuleSettings
 import com.example.gamesession.authentication.domain.model.User
 import kotlinx.coroutines.flow.Flow

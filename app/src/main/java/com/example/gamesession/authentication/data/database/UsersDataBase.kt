@@ -4,10 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.gamesession.authentication.data.database.dao.ComputerDao
+import com.example.gamesession.authentication.data.database.dao.GameSessionDao
+import com.example.gamesession.authentication.data.database.dao.SessionTariffDao
+import com.example.gamesession.authentication.data.database.dao.UserDao
+import com.example.gamesession.authentication.data.database.entity.ComputerEntity
+import com.example.gamesession.authentication.data.database.entity.GameSessionEntity
+import com.example.gamesession.authentication.data.database.entity.SessionTariffEntity
+import com.example.gamesession.authentication.data.database.entity.UserEntity
 
 @Database(
     entities = [UserEntity::class, ComputerEntity::class, GameSessionEntity::class, SessionTariffEntity::class],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class UsersDataBase : RoomDatabase() {

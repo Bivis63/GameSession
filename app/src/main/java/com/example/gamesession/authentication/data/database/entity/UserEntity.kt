@@ -1,4 +1,4 @@
-package com.example.gamesession.authentication.data.database
+package com.example.gamesession.authentication.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.Index
