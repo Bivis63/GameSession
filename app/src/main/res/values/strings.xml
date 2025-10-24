@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">GameSession</string>
+    <string name="title">NYTIMES</string>
+    <string name="language_validation">Логин пользователя должен быть на кириллице</string>
+    <string name="error_password_too_short">Пароль должен быть не менее 6 символов</string>
+    <string name="error_password_no_digit">Пароль должен содержать хотя бы одну цифру</string>
+    <string name="error_password_no_latin">Пароль должен содержать хотя бы одну латинскую букву</string>
+    <string name="hide_password">Скрыть пароль</string>
+    <string name="show_password">Показать пароль</string>
+    <string name="password">Пароль</string>
+    <string name="invalid_login">Неверный логин</string>
+    <string name="login">Логин</string>
+    <string name="textEnterButton">ВОЙТИ</string>
+    <string name="search">Поиск</string>
 </resources>
